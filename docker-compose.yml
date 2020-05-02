@@ -16,7 +16,6 @@ services:
   django:
     image: python:3.6
     command: bash -c "pip3 install -r requirements.txt && python manage.py migrate && python manage.py runserver django:8000"
-    # command: bash -c "pip3 install -r requirements.txt && python manage.py migrate && touch /tmp/fake_log && tail -f /tmp/fake_log"
     hostname: django
     working_dir: /app/url_watch
     environment:
