@@ -62,7 +62,7 @@ def fetch_url(url, creator_uuid):
                     content_hash=sha2
                 ).order_by('-id').first()
 
-                if previous_result is not None:
+                if previous_result is not None and previous_result.content is not None:
                     # diff these 2...
                     content_new = content.strip().splitlines()
                     content_old = previous_result.content.strip().splitlines()
