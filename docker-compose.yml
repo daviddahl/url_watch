@@ -1,0 +1,88 @@
+version: "3"
+
+services:
+  db:
+    hostname: db
+    image: postgres:10
+    environment:
+      - POSTGRES_DB=url_watch
+      - POSTGRES_USER=url_watch
+      - POSTGRES_PASSWORD=url_watch
+    volumes:
+      - ./data:/var/lib/postgresql/data:cached
+    ports:
+      - 5432:5432
+
+  django:
+    image: python:3.6
+    command: bash -c "pip3 install -r requirements.txt && python manage.py migrate && python manage.py runserver django:8000"
+    # command: bash -c "pip3 install -r requirements.txt && python manage.py migrate && touch /tmp/fake_log && tail -f /tmp/fake_log"
+    hostname: django
+    working_dir: /app/url_watch
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=url_watch.settings
+      - DB_HOST=db
+      - DB_USER=url_watch
+      - DB_PASSWORD=url_watch
+      - DB_NAME=url_watch
+    volumes:
+      - ./app:/app:delegated
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=passwd
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  worker:
+    image: python:3.6
+    container_name: worker
+    command: bash -c "pip3 install -r requirements.txt && celery -A url_watch worker -l info --loglevel=DEBUG"
+    working_dir: /app/url_watch
+    volumes:
+      - ./app/:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=url_watch.settings
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=db
+      - DB_USER=url_watch
+      - DB_PASSWORD=url_watch
+      - DB_NAME=url_watch
+      - CELERY_BROKER=amqp://user:passwd@rabbit
+    depends_on:
+      - django
+      - db
+      - rabbitmq
+
+  beat-worker:
+    image: python:3.6
+    container_name: beat-worker
+    command: bash -c "pip3 install -r requirements.txt && celery -A url_watch beat -l info --loglevel=DEBUG --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    working_dir: /app/url_watch
+    volumes:
+       - ./app:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=url_watch.settings
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=db
+      - DB_USER=url_watch
+      - DB_PASSWORD=url_watch
+      - DB_NAME=url_watch
+      - CELERY_BROKER=amqp://user:passwd@rabbit
+    depends_on:
+      - django
+      - db
+      - rabbitmq
+
+volumes:
+  data: {}
+  app: {}

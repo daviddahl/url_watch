@@ -1,0 +1,152 @@
+<html>
+  <head>
+    <style>
+     .pointer {cursor: pointer;}
+
+     #detail-view {
+       padding: 2em;
+       z-index: 100;
+       position: absolute;
+       left: 50%;
+       top: 50%;
+       width: 600px;
+       height: 600px;
+       overflow: scroll;
+       margin-top: -300px;
+       margin-left: -300px;
+       display: none;
+       background-color: #e6e6e6;
+       border: #cccccc;
+       box-shadow: 3px 8px 6px -6px gray;
+     }
+    </style>
+    <link rel="stylesheet"
+          href="https://assets.ubuntu.com/v1/vanilla-framework-version-2.10.1.min.css" />
+    <script>
+     window.addEventListener('DOMContentLoaded', (event) => {
+       getUrlList();
+     });
+
+     function closeDetailView() {
+       document.querySelector('#detail-view').style = 'display: none;';
+       document.querySelector('#watcher-history').innerHtml = '';
+     }
+
+     function renderHistory(data, url) {
+       // Display the detail screen for the watcher history data
+       let viewNode = document.querySelector('#watcher-history');
+       viewNode.innerHtml = '';
+       data.forEach((item) => {
+         let li = document.createElement('li');
+         let changes = 'No change in content';
+         let content_changed = false;
+         if (item.content) {
+           changes = 'Content changed';
+           content_changed = true;
+         }
+         if (content_changed) {
+           var pre = document.createElement('pre');
+           pre.classList.add('diff-display');
+           pre.textContent = item.diff;
+         }
+         li.innerHTML =
+           `<strong>${item.created_at}</strong> <br />status: ${item.status} <br />content_hash: ${item.content_hash}<br />Changes: ${changes}`;
+         li.classList.add('p-list__item');
+         if (pre) {
+           li.appendChild(pre);
+         }
+         viewNode.appendChild(li);
+       });
+
+       document.querySelector('#watcher-history-title').textContent = url;
+       viewNode.parentNode.style.display = 'block';
+     }
+
+     function renderList(data) {
+       let list = document.querySelector('#url-list');
+
+       while (list.firstChild) {
+         list.removeChild(list.lastChild);
+       }
+
+       data.forEach((item) => {
+         let li = document.createElement('li');
+         li.textContent = item.url;
+         li.classList.add('p-list__item', 'pointer');
+         li.addEventListener('click', (event) => {
+           fetchWatcherHistory(item.id, item.url);
+         });
+         list.appendChild(li);
+       });
+     }
+
+     function fetchWatcherHistory(id, url) {
+       // Get the last 10 watches for a URL
+       fetch(`/watcher/api/url-watcher/${id}`, {
+         method: 'get',
+         headers: {
+           'Accept': 'application/json, text/plain, */*',
+           'Content-Type': 'application/json',
+           'X-Requested-With': 'XMLHttpRequest'
+         }
+       })
+         .then((res) => {
+           if (res.status != 200) {
+             return alert('Server Error');
+           }
+           return res.json();
+         })
+         .then((data) => {
+           renderHistory(data, url);
+         })
+     }
+
+     function getUrlList() {
+       fetch(`/watcher/api/url/list/`, {
+         method: 'get',
+         headers: {
+           'Accept': 'application/json, text/plain, */*',
+           'Content-Type': 'application/json',
+           'X-Requested-With': 'XMLHttpRequest'
+         }})
+         .then((res) => {
+           if (res.status != 200) {
+             return alert('Server Error');
+           }
+           return res.json();
+         })
+         .then((data) => {
+           renderList(data);
+         })
+     }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="margin: 2em;">
+    <main>
+      <h1>URL Watcher</h1>
+      <p>Hello <strong>{{ uuid }}</strong>! You are nothing but a UUID to CPUs.</p>
+      <p>This is your URL List</p>
+      <header id="navigation" class="p-navigation is-dark">
+        <nav class="p-navigation__nav">
+          <ul class="p-navigation__items" role="menu">
+            <li class="p-navigation__item is-selected" role="menuitem">
+              <a class="p-navigation__link" href="/watcher/">Add URL</a>
+            </li>
+            <li class="p-navigation__item" role="menuitem">
+              <a class="p-navigation__link" href="/watcher/list/">URL List</a>
+            </li>
+          </ul>
+        </nav>
+      </header>
+      <ul class="p-list--divided" id="url-list">
+
+      </ul>
+    </main>
+    <div id="detail-view">
+      <button onclick="closeDetailView();" class="p-button--neutral is-dense">Close</button>
+      <h3 id="watcher-history-title"></h3>
+      <ul id="watcher-history" class="p-list--divided"></ul>
+    </div>
+  </body>
+</html>

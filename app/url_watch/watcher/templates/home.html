@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <link rel="stylesheet"
+          href="https://assets.ubuntu.com/v1/vanilla-framework-version-2.10.1.min.css" />
+    <script>
+     window.addEventListener('DOMContentLoaded', (event) => {
+       clearForm();
+     });
+
+     function clearForm() {
+       document.querySelector('#id_url').focus();
+       document.querySelector('#id_url').value = 'https://';
+     }
+
+     function create_url_task() {
+       function validate() {
+         let uuid = document.querySelector('#creator-uuid').value;
+         if (uuid.length != 36) {
+           throw new Error('A server error occured, no user UUID was created')
+         }
+
+         let url = document.querySelector('#id_url').value;
+         if (!url) {
+           throw new Error('A URL cannot be blank')
+         }
+
+         let every = document.querySelector('#id_every').value;
+         if (every < 1) {
+           throw new Error('Every should be an integer greater than 1');
+         }
+
+         let periods = ['days', 'hours', 'minutes', 'seconds'];
+         let period = document.querySelector('#id_period').value;
+         if (!periods.includes(period)) {
+           throw new Error('Invalid interval period selected');
+         }
+
+         return {
+           creator_uuid: uuid,
+           url: url,
+           every: every,
+           period: period,
+         };
+       }
+
+       let values;
+       try {
+         values = validate();
+         console.log(JSON.stringify(values));
+       } catch (ex) {
+         return alert(ex);
+       }
+
+       let status;
+
+       fetch('/watcher/api/url/', {
+         method: 'post',
+         headers: {
+           'Accept': 'application/json, text/plain, */*',
+           'Content-Type': 'application/json',
+           'X-CSRFToken':  '{{ csrf_token }}',
+           'X-Requested-With': 'XMLHttpRequest'
+         },
+         body: JSON.stringify(values)
+       })
+         .then((res) => {
+           status = res.status;
+           return res.json();
+         })
+         .then((res) => {
+           if (status != 201) {
+             alert(`Errors: ${JSON.stringify(res)}`);
+           } else {
+             alert('Your url watcher has been created');
+             clearForm();
+           }
+         });
+     }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="margin: 2em;">
+    <main>
+      <h1>URL Watcher</h1>
+      <p>Hello <strong>{{ uuid }}</strong>! You are nothing but a UUID to CPUs.</p>
+      <p>But that is OK, you can still add a URL that can be checked for changes on a regular schedule even without a human name.</p>
+    </div>
+    <header id="navigation" class="p-navigation is-dark">
+      <nav class="p-navigation__nav">
+        <ul class="p-navigation__items" role="menu">
+          <li class="p-navigation__item is-selected" role="menuitem">
+            <a class="p-navigation__link" href="/watcher/">Add URL</a>
+          </li>
+          <li class="p-navigation__item" role="menuitem">
+            <a class="p-navigation__link" href="/watcher/list/">URL List</a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div>
+      <input type="hidden"
+             name="creator_uuid"
+             class=""
+             id="creator-uuid"
+             autocomplete="off"
+             value="{{ uuid }}" />
+      {% for field in url_form %}
+      <div>
+        {{ field.errors }}
+        {{ field.label_tag }}
+      </div>
+      <div>
+        {{ field }}
+      </div>
+      {% endfor %}
+      <div>
+        <button onclick="create_url_task();">Create Url Watcher</button>
+      </div>
+    </main>
+  </body>
+</html>

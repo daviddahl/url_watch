@@ -1,0 +1,8 @@
+celery
+django==2.2.*
+django-celery-beat
+djangorestframework
+ipdb
+ipython
+psycopg2
+requests
