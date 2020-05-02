@@ -35,7 +35,7 @@
      function renderHistory(data, url) {
        // Display the detail screen for the watcher history data
        let viewNode = document.querySelector('#watcher-history');
-       viewNode.innerHtml = '';
+       viewNode.innerHTML = '';
        data.forEach((item) => {
          let li = document.createElement('li');
          let changes = 'No change in content';
