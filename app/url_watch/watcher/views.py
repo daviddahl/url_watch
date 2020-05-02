@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -41,7 +41,7 @@ def url_list(request):
 
 
 class UrlView(APIView):
-    permission_classes = [IsAuthenticated, AllowAny,]
+    permission_classes = [AllowAny,]
 
     def post(self, request, format=None):
 
@@ -60,7 +60,7 @@ class UrlView(APIView):
 
 
 class UrlListView(APIView):
-    permission_classes = [IsAuthenticated, AllowAny,]
+    permission_classes = [AllowAny,]
 
     def get(self, request, format=None):
         creator_uuid = request.session.get('client_uuid')
@@ -90,7 +90,7 @@ class UrlListView(APIView):
 
 
 class UrlWatcherListView(APIView):
-    permission_classes = [IsAuthenticated, AllowAny,]
+    permission_classes = [AllowAny,]
 
     def get(self, request, id, format=None):
         creator_uuid = request.session.get('client_uuid')
