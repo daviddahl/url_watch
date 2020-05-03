@@ -24,3 +24,7 @@ Once the containers are all ready, open your web browser and point it at:
 http://127.0.0.1/watcher/
 
 There are 2 screens: the `Add Url` screen and the `URL List` screen where one can drill down into the data collected by Celery, et al.
+
+### Note & Warning
+
+All Django & DRF endpoint Authentication is set to allow any user to submit urls and monitor the ones submitted. Do not use this software for anything public-facing.
