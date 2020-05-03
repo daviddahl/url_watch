@@ -21,7 +21,7 @@ run `docker compose up` from this directory
 
 Once the containers are all ready, open your web browser and point it at:
 
-http://127.0.0.1/watcher/
+http://127.0.0.1:8000/watcher/
 
 There are 2 screens: the `Add Url` screen and the `URL List` screen where one can drill down into the data collected by Celery, et al.
 
